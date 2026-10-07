@@ -277,8 +277,9 @@ Tag** aus, nicht von heute. Sonst stünde am Samstag eine Leiste voller vergange
 
 Offen daran:
 
-- **Kita-Karte für Romy.** Nur ein Eintrag in `CONFIG.kita.children` mit eigener
-  Local-To-do-Liste (`todo.kitaromy`), kein Code nötig.
+- **Kita-Karte für Romy.** Siehe „Kita-Karte für zwei Kinder" direkt unter diesem Block.
+  Die frühere Annahme „nur ein Eintrag in der Konfiguration, kein Code" stimmt nicht mehr,
+  weil das Abholen bei Romy anders läuft.
 - **Kita-Auswahl im Abendblock.** Die Karte für morgen erscheint ab 18:00 bereits, ist aber
   noch nicht gegen einen echten Abend getestet.
 - **Eigene Liste für App-Zustand.** `CONFIG.appState.entity` zeigt vorerst auf `todo.kitazoe`,
@@ -311,6 +312,51 @@ Weitere Anforderungen:
 Schreibbug weiter unten). Ein Eintrag je Tag, Datum als Titel, Zustand als JSON in der
 Beschreibung. Bewusst gewählt gegen `input_text`, weil das in HA auf 255 Zeichen begrenzt ist
 und für mehrere Tage mit zwei Phasen nicht reicht.
+
+#### Kita-Karte für zwei Kinder (Romy und Zoe) — offen
+
+Gilt für die **jetzige App** und für die spätere **iPhone-Fassung**. Beide nutzen dieselbe
+Karte, es wird nichts doppelt gebaut.
+
+**Bringen — bei beiden Kindern gleich.** Die Logik bleibt wie bei Zoe: Verfügbarkeit,
+Auswahl, wer bringt, Entscheidung, Tagesleiste.
+
+**Abholen — unterschiedlich:**
+
+| | Zoe | Romy |
+|---|---|---|
+| Abholung | Zeit aus den Möglichkeiten 12:30 / 13:15 / 14:30, Phase 1 und 2 | **ein Textfeld: „Abholen bis XX:XX Uhr"** |
+| Entscheidung | Aus den eingetragenen Möglichkeiten wird eine gewählt | Entfällt. Die Uhrzeit wird direkt eingetragen |
+| Countdown | Bis zur gewählten Zeit | Bis zur eingetragenen Uhrzeit |
+
+**Umsetzung (Vorschlag):**
+
+- `CONFIG.kita.children` bekommt Romy mit eigener Local-To-do-Liste `todo.kitaromy`, wie bei
+  Zoe (`todo.kitazoe`). Siehe „Wie Daten in HA abgelegt werden".
+- Je Kind ein Schalter in der Konfiguration, zum Beispiel `abholung: "auswahl"` (Zoe) oder
+  `abholung: "frei"` (Romy). Der Code zeigt je nach Schalter die Auswahl oder das Textfeld.
+  Ein weiteres Kind braucht dann nur einen Eintrag.
+- Zustand je Tag bei Romy: `{ bring, abholenBis: "HH:MM" }`. Es gibt kein `cand` und kein
+  `final`.
+- Die Statuspunkte der Tagesleiste müssen für Romy neu gedeutet werden: grün, wenn Bringen
+  **und** Uhrzeit eingetragen sind. „Niemand kann" entfällt, weil es keine Auswahl gibt.
+- Die Heute-Ansicht (`js/today-view.js`) geht schon über `CONFIG.kita.children`. Prüfen, ob
+  zwei Karten untereinander noch auf das Wandtablet passen (1080 × 810).
+
+**iPhone-Fassung:** Die Kita-Karte bleibt dort erhalten (siehe Tabelle unter „iPhone-Fassung").
+Mit zwei Kindern gilt: **untereinander statt nebeneinander**, ein Kind pro Karte. Das Textfeld
+bei Romy braucht `type="time"` oder eine Uhrzeitauswahl, damit auf dem Telefon die passende
+Tastatur erscheint. Tippziele 44 px.
+
+**Offene Fragen:**
+
+1. **Zwei Karten oder eine mit Umschalter?** Zwei Karten sind übersichtlicher und passen am
+   Telefon untereinander. Auf dem Wandtablet kostet das Höhe.
+2. **Freitext oder Uhrzeitfeld?** Uhrzeitfeld verhindert Tippfehler („16.30", „halb fünf").
+   Vorschlag: Uhrzeitfeld.
+3. **Hat Romy eigene Betreuungszeiten oder Wochentage**, an denen sie nicht geht?
+4. **Gibt es einen Kalender `calendar.romy`?** In `config.example.js` steht für Zoe ein
+   Kalender, für Romy bislang nicht (Avatar `img/avatars/romy.svg` ist da).
 
 ### Ansicht "Heute" — gebaut
 
@@ -690,7 +736,7 @@ Tablet da —, sondern für **eine einzelne Entscheidung oder Eintragung**.
 
 | Funktion | iPhone | Begründung |
 |---|---|---|
-| Kita-Karte | **bleibt** | Der stärkste Fall überhaupt: „wer holt wann ab" wird unterwegs entschieden, nicht an der Wand |
+| Kita-Karte | **bleibt** | Der stärkste Fall überhaupt: „wer holt wann ab" wird unterwegs entschieden, nicht an der Wand. Künftig für zwei Kinder, Romy mit Uhrzeitfeld statt Auswahl (siehe „Kita-Karte für zwei Kinder") |
 | Einkaufsliste | **bleibt** | Wird im Laden gebraucht. Kategorien und Bilder tragen auch schmal |
 | Aufgaben | **bleibt** | Zeilen statt Karten, Zuweisung über ein Blatt statt vier Spalten |
 | Heute | **bleibt, gekürzt** | Termine, Fälliges, Kita. Der Abendblock „Morgen" ist am Telefon der eigentliche Nutzen |
