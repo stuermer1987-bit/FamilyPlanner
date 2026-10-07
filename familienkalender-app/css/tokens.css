@@ -1,0 +1,95 @@
+/* Designtokens nach DESIGN.md — Pastellsystem 1:1 aus dem Skylight-Kalender.
+   Wird vor style.css eingebunden und trägt inzwischen alle Ansichten. */
+
+/* Selbst gehostet: das Wandtablet darf nicht von einem CDN abhängen.
+   Beide Schriften stehen unter SIL OFL. Variable Fonts, deshalb ein Schnitt je Familie. */
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/newsreader-latin.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Eigener Schnitt statt schräg gestelltem Aufrecht — bei einer Serifenschrift ist
+   Kursiv eine andere Zeichnung, kein geneigtes Normal. */
+@font-face {
+  font-family: "Newsreader";
+  src: url("fonts/newsreader-italic-latin.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Figtree";
+  src: url("fonts/figtree-latin.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Neutrale Flächen — alle warm gebrochen */
+  --c-canvas: #fffbf7;
+  --c-surface: #ffffff;
+  --c-sand: #f6e6d5;
+  --c-sand-soft: #faf4ec;
+  --c-line: #efe7dc;
+  --c-ink: #211e1b;
+  --c-ink-2: #6b655e;
+  --c-muted: #95918b;
+
+  /* Pastellfamilien: soft (Fläche) / mid (Tönung) / solid (Marker) */
+  --c-korall-s: #fce1dd;
+  --c-korall-m: #fcc3b9;
+  --c-korall: #f86a53;
+
+  --c-aprikose-s: #fdf4e4;
+  --c-aprikose-m: #ffe1b7;
+  --c-aprikose: #f2a357;
+
+  --c-minze-s: #e4f0f0;
+  --c-minze-m: #b5dede;
+  --c-minze: #60a8a0;
+
+  --c-himmel-s: #e8f0f7;
+  --c-himmel-m: #b1cedd;
+  --c-himmel: #3caae0;
+
+  --c-flieder-s: #f3ebf3;
+  --c-flieder-m: #dfd2df;
+  --c-flieder: #8663bf;
+
+  --c-rose-s: #fef2f2;
+  --c-rose-m: #fbc9da;
+  --c-rose: #f592b3;
+
+  --c-sandf-s: #f6e6d5;
+  --c-sandf-m: #f2e7d9;
+  --c-sandf: #ce802d;
+
+  /* Schrift — Serifen für Zeit und Namen, Grotesk für Inhalt (DESIGN.md, Abschnitt 3) */
+  --f-display: "Newsreader", ui-serif, "Iowan Old Style", Palatino, Georgia, serif;
+  --f-ui: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --t-display: 44px;
+  --t-title: 28px;
+  --t-heading: 19px;
+  --t-body: 15px;
+  --t-meta: 13px;
+  --t-label: 11px;
+
+  /* Form */
+  --r-card: 20px;
+  --r-chip: 14px;
+  --r-pill: 999px;
+
+  --gap: 12px;
+  --pad: 16px;
+  --sec: 24px;
+
+  --sh-1: 0 1px 2px rgba(58, 44, 32, 0.05);
+  --sh-2: 0 4px 16px rgba(58, 44, 32, 0.07);
+  --sh-3: 0 12px 32px rgba(58, 44, 32, 0.1);
+}
