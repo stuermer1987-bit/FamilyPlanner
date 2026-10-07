@@ -1,5 +1,8 @@
 # Designkonzept Familienkalender
 
+> Wer eine neue Ansicht baut, beginnt mit `STYLEGUIDE.md` — dem kurzen Regelblatt.
+> Dieses Dokument erklärt, woher das System kommt und warum es so ist.
+
 Grundlage: die Skylight-Kalender-Oberfläche
 ([Calendar Max](https://uk.myskylight.com/calendar-max/), [Calendar](https://uk.myskylight.com/calendar/)).
 Das Pastellsystem ist 1:1 übernommen — alle Hex-Werte unten sind aus den Produkt- und
@@ -210,7 +213,8 @@ Neu dazu, weil Skylight sie überall benutzt:
 ## 6. Die Ansichten
 
 **Sidebar** — Sand `#FAF4EC`, 88 px. Aktives Item: weiße Pille, `--sh-2`, Icon in `--c-ink`,
-Label in `--t-label`. Bleibt im Kiosk-Modus sichtbar, der Header entfällt dort.
+Label in `--t-label`. Die Icons sind seit 07.10.2026 Strichsymbole (SVG, `currentColor`,
+in `js/app.js`) statt Emoji — Emoji sehen je Gerät anders aus und bringen fremde Farben mit. Bleibt im Kiosk-Modus sichtbar, der Header entfällt dort.
 
 **Header** — „Familie Sturm" in `--t-title` (Serife), Uhrzeit in `--t-display`, Datum in
 `--t-meta`. Wetter rechts, Countdowns als `.chip--count` in Aprikose.
@@ -218,15 +222,23 @@ Label in `--t-label`. Bleibt im Kiosk-Modus sichtbar, der Header entfällt dort.
 **Kalender** — die Leitansicht, direkt nach Skylight:
 - Personenleiste oben: Avatar (solid) + Name + Fortschrittsbalken je Person.
 - Tagesköpfe in `--t-title` (Serife). Heute: Tageszahl in weiß auf korallenem Kreis.
+- Jede Tagesspalte ist eine weiße Karte (`--r-card`, `--sh-1`) auf dem warmen Grund, mit
+  `--gap` dazwischen statt Trennlinien. Die heutige Spalte hebt sich nur über `--sh-2` ab —
+  keine Korallfläche mehr, die war zu viel Signalfarbe (seit 07.10.2026).
 - Ganztägiges als volle Pille in `mid` über dem Raster.
 - Termine als `.event` in `soft`, Avatar unten rechts.
 - Mehrpersonentermine: 45°-Streifen aus den **soft**-Tönen der Beteiligten (nicht mid — sonst
   leidet die Titellesbarkeit), Avatare gestapelt unten rechts. Ist „Die Sturms" beteiligt,
   gilt weiter die bestehende Regel: keine Streifen, nur Flieder.
-- Zeitachse links in `--t-meta` / `--c-muted`, Raster in `--c-line`.
+- Zeitachse links in `--t-meta` / `--c-muted`, Raster in `--c-line` auf 55 % — die Linien
+  sollen ordnen, nicht rahmen.
 
 **Heute** — Datums-Hero in `--t-display`, darunter Karten in fester Reihenfolge: Termine heute,
 Kita, Aufgaben, Essen. Jede Karte weiß mit `--sh-2`, Überschrift in `--t-label`.
+Termine stehen als Pastellblöcke wie im Kalender (`.event-chip--zeile`), Vergangenes
+verblasst. Fällige Aufgaben sind `.task-row` in der Tönung der Person und direkt abhakbar.
+Tagsüber zeigt eine Karte „Morgen" die Termine des Folgetags, ab 18:00 übernimmt der
+Abendblock.
 
 **Einkaufen** — Listenfläche in Sand `#F6E6D5`, Zeilen als weiße `.chip`-Reihen, `.check`
 rechts. Abgehakt: Fläche wechselt auf Minze-soft, Text auf `--c-muted` mit Durchstreichung.

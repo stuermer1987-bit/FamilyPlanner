@@ -168,26 +168,32 @@ const TodoView = {
     const item = this.items.find((i) => i.uid === uid);
     if (!item) return;
 
-    const meta = parseTaskMeta(item);
-    const wasOpen = item.status !== "completed";
-
     try {
-      await HaApi.toggleTodoItem(CONFIG.todoList.entity, item);
-
-      // Wiederkehrende Aufgabe: beim Abhaken direkt die nächste Fälligkeit anlegen.
-      if (wasOpen && meta.repeat) {
-        const due = nextDueDate(item.due?.slice(0, 10), meta.repeat);
-        if (due) {
-          await HaApi.addTodoItem(CONFIG.todoList.entity, item.summary, {
-            dueDate: due,
-            description: JSON.stringify(meta),
-          });
-        }
-      }
+      await this.umschalten(item);
       this.load();
     } catch (err) {
       console.error(err);
       this.showError(err.message);
+    }
+  },
+
+  // Nur der Schreibzugriff, ohne Neuzeichnen - die Heute-Ansicht hakt über denselben Weg
+  // ab, sonst gäbe es die Wiederholungslogik zweimal.
+  async umschalten(item) {
+    const meta = parseTaskMeta(item);
+    const wasOpen = item.status !== "completed";
+
+    await HaApi.toggleTodoItem(CONFIG.todoList.entity, item);
+
+    // Wiederkehrende Aufgabe: beim Abhaken direkt die nächste Fälligkeit anlegen.
+    if (wasOpen && meta.repeat) {
+      const due = nextDueDate(item.due?.slice(0, 10), meta.repeat);
+      if (due) {
+        await HaApi.addTodoItem(CONFIG.todoList.entity, item.summary, {
+          dueDate: due,
+          description: JSON.stringify(meta),
+        });
+      }
     }
   },
 

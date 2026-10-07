@@ -173,6 +173,10 @@ const TodayView = {
     );
     const isEvening = now.getHours() >= EVENING_HOUR;
 
+    const morgen = DaySummary.eventsOn(events, tomorrow)
+      .filter((e) => e.start.dateTime)
+      .sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
+
     // Auf "Heute" ist die Kopfzeile ausgeblendet (siehe app.js) - Datum, Uhrzeit und
     // Wetter stehen stattdessen hier in einer Zeile, sonst stünde das Datum doppelt.
     this.container.innerHTML = `
@@ -209,7 +213,7 @@ const TodayView = {
               dueToday.length
                 ? dueToday
                     .slice(0, 6)
-                    .map((i) => `<div class="today-row"><span class="today-label">${i.summary}</span></div>`)
+                    .map((i) => this.aufgabenZeile(i, today))
                     .join("")
                 : `<p class="empty">Nichts offen.</p>`
             }
@@ -221,25 +225,49 @@ const TodayView = {
             <h3 class="today-card-title">Termine</h3>
             ${
               agenda.length
-                ? agenda
-                    .map(
-                      (ev) => `
-                <div class="today-row">
-                  <span class="today-time">${new Date(ev.start.dateTime).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</span>
-                  <span class="today-label">${ev.summary}</span>
-                  <span class="today-dot" style="background:${ev.calendars[0].color}"></span>
-                </div>`
-                    )
-                    .join("")
+                ? agenda.map((ev, i) => this.terminBlock(ev, `heute-${i}`, now)).join("")
                 : `<p class="empty">Keine Termine mit Uhrzeit.</p>`
             }
           </section>
 
           ${this.mealsSection(meals)}
-          ${isEvening ? this.eveningBlock(events, tomorrow, forecast) : ""}
+
+          <!-- Tagsüber der Blick auf morgen als Terminblöcke. Ab 18:00 übernimmt der
+               Abendblock mit Wetter und Hinweis - beides zusammen stünde doppelt da. -->
+          ${
+            isEvening
+              ? this.eveningBlock(events, tomorrow, forecast)
+              : morgen.length
+                ? `<section class="today-card">
+                     <h3 class="today-card-title">Morgen</h3>
+                     ${morgen.map((ev, i) => this.terminBlock(ev, `morgen-${i}`)).join("")}
+                   </section>`
+                : ""
+          }
         </div>
       </div>
     `;
+
+    // Ein Tipp auf den Block öffnet dieselben Details wie im Kalender.
+    const termine = { heute: agenda, morgen };
+    this.container.querySelectorAll("[data-termin]").forEach((el) => {
+      const [tag, index] = el.dataset.termin.split("-");
+      el.addEventListener("click", () => showEventDetails(termine[tag][Number(index)]));
+    });
+
+    this.container.querySelectorAll("[data-toggle]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const item = todos.find((t) => t.uid === btn.dataset.toggle);
+        if (!item) return;
+        btn.disabled = true;
+        try {
+          await TodoView.umschalten(item);
+        } catch (err) {
+          console.error("Aufgabe nicht abgehakt:", err);
+        }
+        this.load();
+      });
+    });
 
     this.mountKita(now, tomorrow);
     this.bindMeals(meals.meals);
@@ -248,6 +276,43 @@ const TodayView = {
     // ohne diesen Aufruf blieben sie bis zum nächsten Intervall leer.
     updateClock();
     updateWeather();
+  },
+
+  // Termin als Pastellblock in der Farbe der Beteiligten - dieselbe Fläche wie im Kalender,
+  // nur im Fluss statt auf der Zeitachse. Mit "jetzt" verblasst, was schon vorbei ist.
+  terminBlock(ev, schluessel, jetzt = null) {
+    const start = new Date(ev.start.dateTime);
+    const ende = new Date(ev.end.dateTime);
+    const vorbei = jetzt && ende < jetzt;
+
+    return `
+      <div class="event-chip event-chip--zeile ${vorbei ? "vorbei" : ""}" data-termin="${schluessel}"
+           style="background:${resolveBackground(ev.calendars)}">
+        <div class="event-title">${ev.summary || "(ohne Titel)"}</div>
+        <div class="event-time">${hhmm(start)} – ${hhmm(ende)}</div>
+        ${ev.location ? `<div class="event-location">${ev.location}</div>` : ""}
+        ${CalendarView.avatarStack(ev.calendars)}
+      </div>`;
+  },
+
+  // Aufgabenzeile wie in der To-Do-Ansicht: Tönung der zuständigen Person, abhakbar.
+  aufgabenZeile(item, heute) {
+    const meta = parseTaskMeta(item);
+    const profil = CONFIG.taskProfiles.find((p) => meta.people.includes(p.id)) || UNASSIGNED;
+    const faellig = item.due.slice(0, 10);
+    const ueberfaellig = faellig < heute;
+
+    return `
+      <div class="task-row" style="--profile-color:${profil.color}">
+        <button class="check" data-toggle="${item.uid}" aria-label="abhaken"></button>
+        ${meta.emoji ? `<span class="task-emoji">${meta.emoji}</span>` : ""}
+        <span class="task-title">${item.summary}</span>
+        ${
+          ueberfaellig
+            ? `<span class="task-due ueberfaellig">${new Date(`${faellig}T00:00:00`).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}</span>`
+            : ""
+        }
+      </div>`;
   },
 
   // Kita-Karten je Kind. Bis zur Umschaltstunde zählt heute, danach ist die Abholung

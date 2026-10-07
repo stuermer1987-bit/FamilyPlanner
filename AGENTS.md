@@ -47,6 +47,10 @@ legt ein globales Objekt an. Reihenfolge in `index.html` beachten, wenn etwas da
 
 ## Gestaltung
 
+**Vor jeder neuen Ansicht oder Funktion `STYLEGUIDE.md` lesen** — das Regelblatt mit
+Farbrollen, Schriftskala, Bauteilen, Rezept und Prüfliste. `DESIGN.md` liefert die
+Begründung dazu.
+
 `DESIGN.md` ist verbindlich: Pastellsystem 1:1 aus dem Skylight-Kalender, Tokens in
 `css/tokens.css`, Schriften Newsreader + Figtree selbst gehostet in `css/fonts/`.
 
@@ -147,7 +151,8 @@ erreichbar**, ein normales `<img src>` genügt. Verwalten über WebSocket `image
 
 | Datei | Inhalt |
 |---|---|
-| `DESIGN.md` | Farbsystem, Schriftskala, Bauteile, Nachtmodus-Entwurf |
+| `STYLEGUIDE.md` | Regelblatt für neue Ansichten: Tokens, Bauteile, Rezept, Prüfliste |
+| `DESIGN.md` | Herkunft und Begründung des Farbsystems, Nachtmodus-Entwurf |
 | `BACKLOG.md` | Offene Punkte, verworfene Ideen mit Begründung, bekannte Grenzen |
 | `PROJEKTE-PLAN.md` | Datenmodell und Stand der Projekte-Ansicht |
 | `AKTIVITAETEN-PLAN.md` | Konzept für die Aktivitäten-Ansicht (Planungspate, Ideenpool) — nichts gebaut |

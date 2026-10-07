@@ -1,12 +1,43 @@
 // Einstiegspunkt: Uhrzeit, Sidebar-Navigation, View-Switching.
 
+// Strichsymbole statt Emoji: Emoji sehen auf jedem Gerät anders aus und bringen eigene
+// Farben mit, die nicht zum Pastellsystem gehören. Die Symbole erben currentColor.
+const navIcon = (inhalt) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inhalt}</svg>`;
+
 const VIEWS = {
-  heute: { label: "Heute", icon: "☀️" },
-  kalender: { label: "Kalender", icon: "📅" },
-  einkaufen: { label: "Einkaufen", icon: "🛒" },
-  todos: { label: "To-Dos", icon: "✅" },
-  projekte: { label: "Projekte", icon: "🛠️" },
-  hellofresh: { label: "HelloFresh", icon: "🍽️" },
+  heute: {
+    label: "Heute",
+    icon: navIcon(
+      `<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>`
+    ),
+  },
+  kalender: {
+    label: "Kalender",
+    icon: navIcon(`<rect x="3" y="4" width="18" height="18" rx="3"/><path d="M8 2v4M16 2v4M3 10h18"/>`),
+  },
+  einkaufen: {
+    label: "Einkaufen",
+    icon: navIcon(
+      `<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>`
+    ),
+  },
+  todos: {
+    label: "To-Dos",
+    icon: navIcon(`<rect x="3" y="3" width="18" height="18" rx="5"/><path d="m8.5 12 2.5 2.5 4.5-5"/>`),
+  },
+  projekte: {
+    label: "Projekte",
+    icon: navIcon(
+      `<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>`
+    ),
+  },
+  hellofresh: {
+    label: "HelloFresh",
+    icon: navIcon(
+      `<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>`
+    ),
+  },
 };
 
 // Uhrzeit steht an zwei Stellen: in der Kopfzeile und - wenn "Heute" offen ist - in der
