@@ -843,43 +843,85 @@ für Safari.
 
 > **Stand: offen, nichts gebaut.**
 
-**Ziel:** Die App läuft nicht mehr im Docker auf dem Mac, sondern auf einem Raspberry Pi,
-der durchgehend an ist. Der Mac muss nicht mehr laufen, damit das Wandtablet geht.
+**Ziel:** Alles läuft auf einem Raspberry Pi, der durchgehend an ist: **Home Assistant und
+die App (nginx).** Der Mac muss nicht mehr laufen, damit das Wandtablet geht.
 
-**Was umzieht:** nur die App (nginx mit den statischen Dateien). Home Assistant läuft schon
-getrennt (`192.168.178.171:8123`) und bleibt dort. Eine Datenbank oder ein Backend gibt es
-nicht.
+**Was umzieht:**
+
+| Teil | Heute | Künftig |
+|---|---|---|
+| App (nginx, statische Dateien) | Docker-Container `familienkalender` auf dem Mac | Docker-Container auf dem Pi |
+| Home Assistant | Docker-Container `homeassistant` auf dem Mac, Konfiguration in `~/homeassistant-config` | Docker-Container auf dem Pi |
+| `config.js` der App | nur auf dem Mac, nicht in Git | Kopie auf dem Pi |
+
+Eine Datenbank oder ein Backend neben HA gibt es nicht. Alles, was die App speichert, liegt
+in den Local-To-do-Listen und in `image_upload` — also **im HA-Konfigurationsordner**. Zieht
+dieser Ordner mit, ziehen die Daten mit.
+
+### Entscheidung vorab: Wie läuft HA auf dem Pi?
+
+- **A: Docker-Container, wie heute (Vorschlag).** Der Konfigurationsordner wird 1:1
+  kopiert. `bring_shopping` (von Hand installiert, Fallstrick 3) und alle eigenen Dateien
+  bleiben erhalten. Auf dem Pi geht zusätzlich `network_mode: host`, was auf dem Mac unter
+  Docker Desktop nicht geht (bessere Geräteerkennung).
+- **B: Home Assistant OS auf dem Pi.** Bequemer: Add-ons, Sicherungen in der Oberfläche,
+  Updates mit einem Klick. Dafür gehört der ganze Pi HA, die App liefe dann als Add-on oder
+  zweiter Rechner, und `bring_shopping` müsste neu eingerichtet werden. Der Umzug ist ein
+  Wiederherstellen aus einer Sicherung statt einem Kopieren.
+
+Die Schritte unten gelten für **A**. Wird es B, ändern sich Schritt 2 und 3.
+
+### Die Adresse behalten
+
+`config.js` zeigt auf `http://192.168.178.171:8123`. Auch das Tablet, die HA-App am Handy
+und die Lesezeichen kennen diese Adresse. **Einfachster Weg:** Die Adresse wandert mit.
+Im Router reservierst du `192.168.178.171` für den Pi, sobald der Mac sie abgegeben hat.
+Dann ändert sich in `config.js`, auf dem Tablet und in den Handy-Apps **nichts**.
+
+Der Haken: Mac und Pi dürfen nie gleichzeitig mit dieser Adresse laufen. Erst den Mac-Container
+stoppen, dann dem Pi die Adresse geben.
 
 ### Schritte
 
-1. **Pi vorbereiten:** Raspberry Pi OS Lite (64 Bit), feste IP oder DHCP-Reservierung im
-   Router, SSH an, Docker installieren.
-2. **Code holen:** `git clone https://github.com/stuermer1987-bit/FamilyPlanner.git`
-   (Repo ist privat, daher Token oder Deploy-Key auf dem Pi nötig).
-3. **`config.js` von Hand anlegen** (Kopie vom Mac oder aus `config.example.js`). Die Datei
-   ist nicht im Repo und muss auf dem Pi extra gepflegt werden.
-4. **Container starten** mit denselben zwei Einhängungen wie heute (siehe „Betrieb"), plus
-   `--restart unless-stopped`, damit er nach einem Stromausfall wieder hochkommt.
-   `nginx:alpine` gibt es für ARM, ein eigenes Image ist nicht nötig.
-5. **Tablet umstellen:** Adresse im Tablet-Browser von der Mac-Adresse auf die Pi-Adresse.
-6. **Probelauf:** alle Ansichten durchklicken, Konsole auf Fehler ansehen,
-   Rezeptkarten-Proxy prüfen (`/rezeptkarte/...`, siehe Fallstrick 10).
-7. **Mac-Container abschalten**, wenn es einige Tage stabil lief.
+1. **Pi vorbereiten:** Raspberry Pi OS Lite (64 Bit), SSH an, Docker installieren, **Start
+   von SSD** statt SD-Karte (HA schreibt viel, SD-Karten sterben dabei).
+2. **Sicherung auf dem Mac:** Eine Kopie der HA-Konfiguration anlegen
+   (`~/homeassistant-config`) **und** in HA eine Sicherung erstellen. Vor dem Kopieren den
+   HA-Container stoppen, damit die Datenbank nicht mitten im Schreiben kopiert wird.
+3. **HA auf den Pi bringen:** Ordner kopieren (zum Beispiel mit `rsync`), HA-Container mit
+   demselben Image und denselben Einhängungen starten, mit `--restart unless-stopped`.
+   Die Versionsnummer des Images **gleich lassen**, erst danach aktualisieren.
+4. **HA prüfen, bevor die App umzieht:** Anmelden, jede Integration ansehen (Kalender,
+   Bring!, HelloFresh, Wetter, Local To-do). Fallstrick 6: HelloFresh kann nach dem Umzug
+   die Anmeldung verlieren, das erkennt man an `write_actions_available = off`.
+5. **App auf den Pi:** `git clone https://github.com/stuermer1987-bit/FamilyPlanner.git`
+   (Repo ist privat, daher Token oder Deploy-Key), `config.js` von Hand kopieren,
+   nginx-Container mit denselben zwei Einhängungen wie heute starten (siehe „Betrieb"),
+   `--restart unless-stopped`. `nginx:alpine` gibt es für ARM.
+6. **Probelauf:** alle Ansichten durchklicken, Konsole auf Fehler ansehen, Bilder in den
+   Projekten prüfen, Rezeptkarten-Proxy prüfen (Fallstrick 10).
+7. **Adresse umziehen und Tablet testen.** Mac-Container erst nach einigen stabilen Tagen
+   löschen. Die alte Konfiguration auf dem Mac **nicht** löschen, sie ist die Rückfallebene.
 
 ### Zu klären
 
-- **Arbeitsablauf danach.** Heute: Datei auf dem Mac speichern, neu laden. Mit dem Pi
-  entscheiden: weiter auf dem Mac entwickeln und per `git pull` auf dem Pi ausrollen
-  (Vorschlag), oder auf dem Pi direkt arbeiten. Der Mac-Container bleibt dann als
-  Entwicklungsumgebung.
+- **Leistung.** HA mit Verlauf und Datenbank braucht mehr als die App. Ein **Pi 4 mit 4 GB
+  oder ein Pi 5** ist die Untergrenze. Ein Pi Zero reicht für HA nicht.
+- **Sicherungen.** Heute ist der Mac die Sicherung seiner selbst. Auf dem Pi braucht es eine
+  regelmäßige Kopie von `homeassistant-config` **und** `config.js` an einen zweiten Ort
+  (nicht ins Git-Repo, beides enthält Zugangsdaten).
+- **Zugangsdaten gehen mit.** Der Ordner enthält die gespeicherten Anmeldungen (iCloud,
+  Bring!, HelloFresh) und die Token der App. Beim Kopieren nicht über unsichere Wege schicken.
+- **Arbeitsablauf danach.** Entwickelt wird weiter auf dem Mac, ausgerollt per `git pull` auf
+  dem Pi. Der Mac-Container der App bleibt dann als Entwicklungsumgebung, zeigt aber auf den
+  HA auf dem Pi. Testeinträge landen dann in der echten Familienliste (siehe
+  `TESTDATEN.md`).
 - **Fallstrick 9 gilt auch dort:** `nginx.conf` ist eine einzeln eingehängte Datei und braucht
   nach Änderungen einen Container-Neustart.
-- **Sicherung:** Auf dem Pi liegt nur `config.js` außerhalb von Git. Eine Kopie davon
-  gehört an einen sicheren Ort (nicht ins Repo).
 - **Reihenfolge zur mobilen Version:** Der Pi ist die Grundlage für Phase 2 (Zugriff von
-  außen). Er sollte **vor** Phase 2 stehen, weil der Mac nicht rund um die Uhr läuft.
-- **Passende Pi-Version:** Pi 4 oder 5 reicht weit; die App ist statisch. Auch ein Pi Zero 2 W
-  würde gehen. SD-Karten sterben bei Dauerbetrieb, besser SSD oder eine hochwertige Karte.
+  außen). Er muss **vor** Phase 2 stehen, weil der Mac nicht rund um die Uhr läuft.
+- **Ausfallzeit.** Während des Umzugs (Schritt 2 bis 7) steht das Wandtablet. Am besten an
+  einem Abend machen.
 
 ## Betrieb
 
