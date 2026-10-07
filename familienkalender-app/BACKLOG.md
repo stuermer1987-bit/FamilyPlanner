@@ -753,6 +753,88 @@ Fernzugriff fehlt.
 5. **Wer nutzt es?** Wenn beide Erwachsenen es auf dem Telefon haben, wird die Frage „wer hat
    was zuletzt geändert" wichtiger als am gemeinsamen Wandtablet.
 
+## Mobile Version
+
+> **Stand: offen, nichts gebaut.** Ausgearbeitet ist der Teil „iPhone-Fassung des Dashboards"
+> direkt darüber (Messung bei 390 px, Umbau-Plan in fünf Stufen, was auf dem Telefon bleibt).
+> Dieser Punkt legt fest, **in welcher Reihenfolge** daraus ein Ziel wird.
+
+**Ziel:** Die jetzige App läuft auch auf dem Handy. Zuerst im Heim-WLAN, danach auch von
+unterwegs. Das Wandtablet bleibt der Hauptbildschirm und darf durch den Umbau nicht
+schlechter werden.
+
+### Phase 1 — Handy im Heim-WLAN
+
+- Umbau nach „iPhone-Fassung", Stufe 1 und 2: Leiste unten statt Sidebar, `100dvh`,
+  Safe Area, Tippziele ab 44 px, dann Heute und Kita.
+- Die Seite ist schon erreichbar: `http://<Adresse des Rechners>:8080` im Handy-Browser.
+- **Fertig, wenn:** Heute, Kita-Karte und Einkaufsliste auf einem 390-px-Gerät bedienbar sind,
+  ohne seitlich zu scrollen. Das Wandtablet sieht unverändert aus.
+
+### Phase 2 — Handy von unterwegs
+
+Das ist **mehr als Tailscale installieren**. Zwei Stolperstellen, die im Plan oben fehlen:
+
+1. **`haUrl` zeigt auf die Heim-Adresse.** `config.js` enthält `http://192.168.178.171:8123`.
+   Von außen ist die nicht erreichbar. Entweder das Handy kommt per VPN (Tailscale) ins
+   Heimnetz und die Adresse bleibt, oder nginx reicht `/api/` und `/api/websocket` an HA
+   durch und `haUrl` wird die eigene Adresse der App. Der zweite Weg braucht eine
+   Weiterleitung mit WebSocket-Unterstützung in `nginx.conf`.
+2. **Der HA-Token steht in `config.js` und wird an jeden ausgeliefert, der die Seite
+   aufruft.** Im Heimnetz ist das hinnehmbar. Bei Zugriff von außen **nur** hinter VPN oder
+   Anmeldung freigeben. Die Seite nie ungeschützt ins Internet stellen.
+
+- **Fertig, wenn:** Kita-Karte und Einkaufsliste mit Mobilfunk (WLAN am Handy aus) bedienbar
+  sind und die Seite ohne VPN/Anmeldung nicht erreichbar ist.
+
+### Offene Fragen
+
+Gerät als Maßstab, Homescreen-Symbol und Gerichtsauswahl stehen bei „iPhone-Fassung →
+Offene Fragen". **Neu:** Gibt es Android-Geräte in der Familie? Dann gilt der Plan nicht nur
+für Safari.
+
+## Raspberry-Pi-Migration
+
+> **Stand: offen, nichts gebaut.**
+
+**Ziel:** Die App läuft nicht mehr im Docker auf dem Mac, sondern auf einem Raspberry Pi,
+der durchgehend an ist. Der Mac muss nicht mehr laufen, damit das Wandtablet geht.
+
+**Was umzieht:** nur die App (nginx mit den statischen Dateien). Home Assistant läuft schon
+getrennt (`192.168.178.171:8123`) und bleibt dort. Eine Datenbank oder ein Backend gibt es
+nicht.
+
+### Schritte
+
+1. **Pi vorbereiten:** Raspberry Pi OS Lite (64 Bit), feste IP oder DHCP-Reservierung im
+   Router, SSH an, Docker installieren.
+2. **Code holen:** `git clone https://github.com/stuermer1987-bit/FamilyPlanner.git`
+   (Repo ist privat, daher Token oder Deploy-Key auf dem Pi nötig).
+3. **`config.js` von Hand anlegen** (Kopie vom Mac oder aus `config.example.js`). Die Datei
+   ist nicht im Repo und muss auf dem Pi extra gepflegt werden.
+4. **Container starten** mit denselben zwei Einhängungen wie heute (siehe „Betrieb"), plus
+   `--restart unless-stopped`, damit er nach einem Stromausfall wieder hochkommt.
+   `nginx:alpine` gibt es für ARM, ein eigenes Image ist nicht nötig.
+5. **Tablet umstellen:** Adresse im Tablet-Browser von der Mac-Adresse auf die Pi-Adresse.
+6. **Probelauf:** alle Ansichten durchklicken, Konsole auf Fehler ansehen,
+   Rezeptkarten-Proxy prüfen (`/rezeptkarte/...`, siehe Fallstrick 10).
+7. **Mac-Container abschalten**, wenn es einige Tage stabil lief.
+
+### Zu klären
+
+- **Arbeitsablauf danach.** Heute: Datei auf dem Mac speichern, neu laden. Mit dem Pi
+  entscheiden: weiter auf dem Mac entwickeln und per `git pull` auf dem Pi ausrollen
+  (Vorschlag), oder auf dem Pi direkt arbeiten. Der Mac-Container bleibt dann als
+  Entwicklungsumgebung.
+- **Fallstrick 9 gilt auch dort:** `nginx.conf` ist eine einzeln eingehängte Datei und braucht
+  nach Änderungen einen Container-Neustart.
+- **Sicherung:** Auf dem Pi liegt nur `config.js` außerhalb von Git. Eine Kopie davon
+  gehört an einen sicheren Ort (nicht ins Repo).
+- **Reihenfolge zur mobilen Version:** Der Pi ist die Grundlage für Phase 2 (Zugriff von
+  außen). Er sollte **vor** Phase 2 stehen, weil der Mac nicht rund um die Uhr läuft.
+- **Passende Pi-Version:** Pi 4 oder 5 reicht weit; die App ist statisch. Auch ein Pi Zero 2 W
+  würde gehen. SD-Karten sterben bei Dauerbetrieb, besser SSD oder eine hochwertige Karte.
+
 ## Betrieb
 
 - **Fernzugriff (Tailscale).** Ohne ihn ist die App nur im Heim-WLAN erreichbar; To-Dos oder
