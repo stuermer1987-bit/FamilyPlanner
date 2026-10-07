@@ -14,7 +14,7 @@ Home Assistant liefert nur die Daten. Es gibt kein Lovelace.
 
 | Datei | Inhalt |
 |---|---|
-| `CLAUDE.md` | Aufbau, Datenhaltung in HA, Fallstricke |
+| `AGENTS.md` | Anweisungen für Coding-Agenten: Einrichtung, Aufbau, Datenhaltung in HA, Fallstricke (`CLAUDE.md` verweist darauf) |
 | `familienkalender-app/DESIGN.md` | Farben, Schriften, Bauteile |
 | `familienkalender-app/BACKLOG.md` | Offene Punkte und verworfene Ideen |
 | `familienkalender-app/PROJEKTE-PLAN.md` | Projekte-Ansicht |
